@@ -8,9 +8,8 @@ string output; // To store the postfix expression
 
 bool isOperator(char ch)
 {
-    return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^';
+    return ch == '+' || ch == '-' || ch == '*' || ch == '/';
 }
-
 void push(char c)
 {
     if (top < 99)
@@ -23,9 +22,10 @@ char pop()
 {
     if (top >= 0)
     {
-        return stack[top--];
+        char c = stack[top--];
+        output += c;
     }
-    return '\0'; // Return null character if stack is empty
+    return 0;
 }
 
 char peek()
@@ -34,7 +34,7 @@ char peek()
     {
         return stack[top];
     }
-    return '\0'; // Return null character if stack is empty
+    return 0;
 }
 
 bool isEmpty()
@@ -59,24 +59,14 @@ int precedence(char op)
     return 0; // For parentheses or invalid operators
 }
 
-bool isRightAssociative(char op)
-{
-    return op == '^'; // Only exponentiation is right associative
-}
-
 bool isAlpha(char x)
 {
     return (x >= 'a' && x <= 'z') || (x >= 'A' && x <= 'Z');
 }
 
-bool isDigit(char x)
-{
-    return x >= '0' && x <= '9';
-}
-
 void InfixToPostfix(char x)
 {
-    if (isAlpha(x) || isDigit(x))
+    if (isAlpha(x))
     {
         output += x; // Append operand to output
     }
@@ -89,21 +79,19 @@ void InfixToPostfix(char x)
         // Pop until '(' is found
         while (!isEmpty() && peek() != '(')
         {
-            output += pop(); // Add popped operator to output
+            pop(); // Output updated in pop
         }
         if (!isEmpty() && peek() == '(')
         {
-            pop(); // Remove '(' from stack, don't add to output
+            pop(); // Remove '(' from stack, no output update
         }
     }
     else if (isOperator(x))
     {
-        // Pop operators based on precedence and associativity
-        while (!isEmpty() && peek() != '(' &&
-               (precedence(x) < precedence(peek()) ||
-                (precedence(x) == precedence(peek()) && !isRightAssociative(x))))
+        // Pop operators with higher or equal precedence
+        while (!isEmpty() && peek() != '(' && precedence(x) <= precedence(peek()))
         {
-            output += pop(); // Add popped operator to output
+            pop(); // Output updated in pop
         }
         push(x); // Push current operator
     }
@@ -116,8 +104,6 @@ int main()
     cin >> infix;
     int n = infix.length();
 
-    output = ""; // Initialize output string
-
     // Process each character of the infix expression
     for (int i = 0; i < n; i++)
     {
@@ -127,10 +113,13 @@ int main()
     // Pop remaining operators from the stack
     while (!isEmpty())
     {
-        char op = pop();
-        if (op != '(') // Don't add unmatched '(' to output
+        if (peek() != '(')
         {
-            output += op;
+            pop(); // Output updated in pop
+        }
+        else
+        {
+            pop(); // Discard any remaining '('
         }
     }
 
